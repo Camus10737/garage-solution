@@ -1,0 +1,7 @@
+.env
+serviceAccountKey.json
+*-adminsdk-*.json
+__pycache__/
+*.pyc
+.venv/
+venv/
