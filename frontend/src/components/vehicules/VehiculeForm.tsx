@@ -10,6 +10,8 @@ const schema = z.object({
   annee: z.string().optional(),
   taille_moteur: z.string().optional(),
   plaque: z.string().optional(),
+  vin: z.string().optional(),
+  kilometrage_actuel: z.number().min(0).optional(),
   notes: z.string().optional(),
 });
 
@@ -33,6 +35,8 @@ export default function VehiculeForm({ defaultValues, onSubmit, loading }: Props
       annee: defaultValues?.annee || '',
       taille_moteur: defaultValues?.taille_moteur || '',
       plaque: defaultValues?.plaque || '',
+      vin: defaultValues?.vin || '',
+      kilometrage_actuel: defaultValues?.kilometrage_actuel,
       notes: defaultValues?.notes || '',
     },
   });
@@ -80,6 +84,26 @@ export default function VehiculeForm({ defaultValues, onSubmit, loading }: Props
           type="text"
           {...register('plaque')}
           placeholder="Ex : ABC-1234"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">VIN</label>
+        <input
+          type="text"
+          {...register('vin')}
+          placeholder="Numéro de série du véhicule"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Kilométrage actuel</label>
+        <input
+          type="number"
+          {...register('kilometrage_actuel', { valueAsNumber: true })}
+          placeholder="Ex : 52000"
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>

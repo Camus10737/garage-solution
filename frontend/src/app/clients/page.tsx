@@ -8,8 +8,10 @@ import Link from 'next/link';
 import { Search, Plus, UserX, UserCheck, Pencil } from 'lucide-react';
 import Drawer from '@/components/ui/Drawer';
 import ClientForm, { ClientFormData } from '@/components/clients/ClientForm';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function ClientsPage() {
+  const { role } = useAuth();
   const [clients, setClients] = useState<Client[]>([]);
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -85,13 +87,15 @@ export default function ClientsPage() {
               className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <button
-            onClick={() => { setError(''); setDrawerOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
-          >
-            <Plus size={16} />
-            Nouveau client
-          </button>
+          {role !== 'comptable' && (
+            <button
+              onClick={() => { setError(''); setDrawerOpen(true); }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+            >
+              <Plus size={16} />
+              Nouveau client
+            </button>
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">

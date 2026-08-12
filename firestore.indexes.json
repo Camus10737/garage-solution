@@ -1,0 +1,168 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "commandes_fournisseur",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "date_commande", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "commandes_fournisseur",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "fournisseur_id", "order": "ASCENDING" },
+        { "fieldPath": "date_commande", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "commandes_fournisseur",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "statut", "order": "ASCENDING" },
+        { "fieldPath": "date_commande", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "commandes_speciales",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "date_commande", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "commandes_speciales",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "client_id", "order": "ASCENDING" },
+        { "fieldPath": "date_commande", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "commandes_speciales",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "statut", "order": "ASCENDING" },
+        { "fieldPath": "date_commande", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "factures",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "date_creation", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "factures",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "statut_reparation", "order": "ASCENDING" },
+        { "fieldPath": "date_creation", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "factures",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "client_id", "order": "ASCENDING" },
+        { "fieldPath": "date_creation", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "devis",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "date_creation", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "devis",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "statut", "order": "ASCENDING" },
+        { "fieldPath": "date_creation", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "devis",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "client_id", "order": "ASCENDING" },
+        { "fieldPath": "date_creation", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "date_envoi", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "notifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "client_id", "order": "ASCENDING" },
+        { "fieldPath": "date_envoi", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "promotions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "date_creation", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "promotions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "statut", "order": "ASCENDING" },
+        { "fieldPath": "date_creation", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "rendez_vous",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "date_heure", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "rendez_vous",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "statut", "order": "ASCENDING" },
+        { "fieldPath": "date_heure", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "mouvements_stock",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "garage_id", "order": "ASCENDING" },
+        { "fieldPath": "piece_id", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    }
+  ]
+}

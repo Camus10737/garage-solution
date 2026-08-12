@@ -2,17 +2,33 @@
 
 import { useEffect, useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-import { Facture } from '@/types';
+import { Facture, StatutReparation } from '@/types';
 import api from '@/lib/api';
 import Link from 'next/link';
 import { Plus, Eye, Filter } from 'lucide-react';
 import Drawer from '@/components/ui/Drawer';
 import FactureForm, { FactureFormData } from '@/components/factures/FactureForm';
+import { useAuth } from '@/contexts/AuthContext';
+
+const LABELS_STATUT_REPARATION: Record<StatutReparation, string> = {
+  en_attente: 'En attente',
+  en_attente_piece: 'En attente de pièce',
+  en_cours: 'En cours',
+  fini: 'Fini',
+};
+
+const COULEURS_STATUT_REPARATION: Record<StatutReparation, string> = {
+  en_attente: 'bg-gray-200 text-gray-700',
+  en_attente_piece: 'bg-orange-100 text-orange-700',
+  en_cours: 'bg-yellow-100 text-yellow-700',
+  fini: 'bg-green-100 text-green-700',
+};
 
 export default function FacturesPage() {
+  const { role } = useAuth();
   const [factures, setFactures] = useState<Facture[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filtre, setFiltre] = useState<'tous' | 'en_cours' | 'pret'>('tous');
+  const [filtre, setFiltre] = useState<'tous' | StatutReparation>('tous');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -26,7 +42,7 @@ export default function FacturesPage() {
   }, []);
 
   const filtered = factures.filter(
-    (f) => filtre === 'tous' || f.statut_vehicule === filtre
+    (f) => filtre === 'tous' || f.statut_reparation === filtre
   );
 
   const handleAjouter = async (data: FactureFormData) => {
@@ -47,9 +63,9 @@ export default function FacturesPage() {
     <AppLayout title="Factures">
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Filter size={15} className="text-gray-400" />
-            {(['tous', 'en_cours', 'pret'] as const).map((f) => (
+            {(['tous', 'en_attente', 'en_attente_piece', 'en_cours', 'fini'] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => setFiltre(f)}
@@ -59,17 +75,19 @@ export default function FacturesPage() {
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {f === 'tous' ? 'Tous' : f === 'en_cours' ? 'En cours' : 'Prêts'}
+                {f === 'tous' ? 'Tous' : LABELS_STATUT_REPARATION[f]}
               </button>
             ))}
           </div>
-          <button
-            onClick={() => { setError(''); setDrawerOpen(true); }}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
-          >
-            <Plus size={16} />
-            Nouvelle facture
-          </button>
+          {role !== 'comptable' && (
+            <button
+              onClick={() => { setError(''); setDrawerOpen(true); }}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
+            >
+              <Plus size={16} />
+              Nouvelle facture
+            </button>
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -80,6 +98,7 @@ export default function FacturesPage() {
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Client</th>
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Date</th>
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Statut</th>
+                <th className="text-left px-6 py-3 font-medium text-gray-600">Paiement</th>
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Total</th>
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Actions</th>
               </tr>
@@ -87,33 +106,46 @@ export default function FacturesPage() {
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-gray-400">
+                  <td colSpan={7} className="text-center py-10 text-gray-400">
                     Chargement...
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-gray-400">
+                  <td colSpan={7} className="text-center py-10 text-gray-400">
                     Aucune facture
                   </td>
                 </tr>
               ) : (
                 filtered.map((f) => (
-                  <tr key={f.facture_id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={f.facture_id} className={`hover:bg-gray-50 transition-colors ${f.annulee ? 'opacity-60' : ''}`}>
                     <td className="px-6 py-4 text-gray-500 font-mono text-xs">
                       {f.numero_facture || '#' + f.facture_id.slice(-6).toUpperCase()}
                     </td>
                     <td className="px-6 py-4 font-medium text-gray-800">{f.client_nom}</td>
                     <td className="px-6 py-4 text-gray-600">{f.date_creation}</td>
                     <td className="px-6 py-4">
+                      {f.annulee ? (
+                        <span className="text-xs px-2 py-1 rounded-full font-medium bg-gray-200 text-gray-600">
+                          Annulée
+                        </span>
+                      ) : (
+                        <span className={`text-xs px-2 py-1 rounded-full font-medium ${COULEURS_STATUT_REPARATION[f.statut_reparation]}`}>
+                          {LABELS_STATUT_REPARATION[f.statut_reparation]}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       <span
                         className={`text-xs px-2 py-1 rounded-full font-medium ${
-                          f.statut_vehicule === 'pret'
+                          f.statut_paiement === 'paye'
                             ? 'bg-green-100 text-green-700'
-                            : 'bg-yellow-100 text-yellow-700'
+                            : f.statut_paiement === 'partiellement_paye'
+                            ? 'bg-yellow-100 text-yellow-700'
+                            : 'bg-red-100 text-red-700'
                         }`}
                       >
-                        {f.statut_vehicule === 'pret' ? 'Prêt' : 'En cours'}
+                        {f.statut_paiement === 'paye' ? 'Payé' : f.statut_paiement === 'partiellement_paye' ? 'Partiel' : 'Non payé'}
                       </span>
                     </td>
                     <td className="px-6 py-4 font-semibold text-gray-800">

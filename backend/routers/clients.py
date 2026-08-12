@@ -5,6 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from core.auth import verify_token
 from core.firebase import get_db
+from core.permissions import require_roles
+from core.tenant import verifier_appartenance
+from routers.factures import _enrich_facture
 from schemas.client import ClientCreate, ClientOut, ClientPatch, ClientUpdate
 from schemas.facture import FactureOut
 
@@ -23,7 +26,7 @@ async def list_clients(
     _user: dict = Depends(verify_token),
 ):
     db = get_db()
-    query = db.collection("clients")
+    query = db.collection("clients").where("garage_id", "==", _user["garage_id"])
     docs = query.stream()
     clients = [_doc_to_client(d) for d in docs]
 
@@ -40,10 +43,11 @@ async def list_clients(
 @router.post("", response_model=ClientOut, status_code=status.HTTP_201_CREATED)
 async def create_client(
     body: ClientCreate,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     data = body.model_dump()
+    data["garage_id"] = _user["garage_id"]
     data["active"] = True
     data["date_creation"] = datetime.now(timezone.utc).isoformat()
 
@@ -61,8 +65,7 @@ async def get_client(
 ):
     db = get_db()
     doc = db.collection("clients").document(client_id).get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Client introuvable")
+    verifier_appartenance(doc, _user["garage_id"], "Client introuvable")
     return _doc_to_client(doc)
 
 
@@ -70,13 +73,12 @@ async def get_client(
 async def update_client(
     client_id: str,
     body: ClientUpdate,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     ref = db.collection("clients").document(client_id)
     doc = ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Client introuvable")
+    verifier_appartenance(doc, _user["garage_id"], "Client introuvable")
 
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     ref.update(updates)
@@ -89,13 +91,12 @@ async def update_client(
 async def patch_client(
     client_id: str,
     body: ClientPatch,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     ref = db.collection("clients").document(client_id)
     doc = ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Client introuvable")
+    verifier_appartenance(doc, _user["garage_id"], "Client introuvable")
 
     ref.update({"active": body.active})
     data = {**doc.to_dict(), "active": body.active, "client_id": client_id}
@@ -108,14 +109,13 @@ async def get_client_factures(
     _user: dict = Depends(verify_token),
 ):
     db = get_db()
-    # Vérifie que le client existe
     client_doc = db.collection("clients").document(client_id).get()
-    if not client_doc.exists:
-        raise HTTPException(status_code=404, detail="Client introuvable")
+    client_data = verifier_appartenance(client_doc, _user["garage_id"], "Client introuvable")
 
-    client_nom = client_doc.to_dict().get("nom", "")
+    client_nom = client_data.get("nom", "")
     docs = (
         db.collection("factures")
+        .where("garage_id", "==", _user["garage_id"])
         .where("client_id", "==", client_id)
         .order_by("date_creation", direction="DESCENDING")
         .stream()
@@ -125,7 +125,6 @@ async def get_client_factures(
     for doc in docs:
         data = doc.to_dict()
         data["facture_id"] = doc.id
-        data["client_nom"] = client_nom
-        factures.append(FactureOut(**data))
+        factures.append(_enrich_facture(data, client_nom))
 
     return factures

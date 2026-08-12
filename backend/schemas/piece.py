@@ -1,6 +1,12 @@
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
+
+
+class FournisseurPiece(BaseModel):
+    fournisseur_id: str
+    prix_achat: float = Field(..., ge=0)
+    delai_livraison: Optional[str] = None
 
 
 class PieceCreate(BaseModel):
@@ -8,6 +14,11 @@ class PieceCreate(BaseModel):
     prix: float = Field(..., ge=0)
     quantite: Optional[int] = None
     fournie_par_client: bool = False
+    numero_item: Optional[str] = None
+    categorie: Optional[str] = None
+    emplacement: Optional[str] = None
+    seuil_alerte: Optional[int] = None
+    fournisseurs: List[FournisseurPiece] = []
 
 
 class PieceUpdate(BaseModel):
@@ -15,6 +26,11 @@ class PieceUpdate(BaseModel):
     prix: Optional[float] = Field(None, ge=0)
     quantite: Optional[int] = None
     fournie_par_client: Optional[bool] = None
+    numero_item: Optional[str] = None
+    categorie: Optional[str] = None
+    emplacement: Optional[str] = None
+    seuil_alerte: Optional[int] = None
+    fournisseurs: Optional[List[FournisseurPiece]] = None
 
 
 class PiecePatch(BaseModel):
@@ -28,3 +44,8 @@ class PieceOut(BaseModel):
     active: bool
     quantite: Optional[int] = None
     fournie_par_client: bool
+    numero_item: Optional[str] = None
+    categorie: Optional[str] = None
+    emplacement: Optional[str] = None
+    seuil_alerte: Optional[int] = None
+    fournisseurs: List[FournisseurPiece] = []

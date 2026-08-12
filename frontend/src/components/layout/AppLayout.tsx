@@ -1,10 +1,11 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useEffect } from 'react';
 import Sidebar from './Sidebar';
 import Header from './Header';
+import { defaultRouteFor, isRouteAllowed } from '@/lib/permissions';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -12,8 +13,9 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ children, title }: AppLayoutProps) {
-  const { user, loading } = useAuth();
+  const { user, loading, role, roleLoading } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (!loading && !user) {
@@ -21,7 +23,14 @@ export default function AppLayout({ children, title }: AppLayoutProps) {
     }
   }, [user, loading, router]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!user || roleLoading) return;
+    if (!isRouteAllowed(pathname, role)) {
+      router.push(defaultRouteFor(role));
+    }
+  }, [user, role, roleLoading, pathname, router]);
+
+  if (loading || (user && roleLoading)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-gray-500">Chargement...</div>
@@ -30,6 +39,7 @@ export default function AppLayout({ children, title }: AppLayoutProps) {
   }
 
   if (!user) return null;
+  if (!isRouteAllowed(pathname, role)) return null;
 
   return (
     <div className="flex min-h-screen bg-gray-50">

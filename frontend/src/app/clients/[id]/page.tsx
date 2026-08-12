@@ -2,10 +2,10 @@
 
 import { use, useEffect, useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-import { Client, Facture, Vehicule } from '@/types';
+import { Client, Facture, Notification, Vehicule } from '@/types';
 import api from '@/lib/api';
 import Link from 'next/link';
-import { Pencil, FileText, Phone, Mail, MapPin, Car, StickyNote, Plus, Trash2 } from 'lucide-react';
+import { Pencil, FileText, Phone, Mail, MapPin, Car, StickyNote, Plus, Trash2, Bell } from 'lucide-react';
 import Drawer from '@/components/ui/Drawer';
 import ClientForm, { ClientFormData } from '@/components/clients/ClientForm';
 import VehiculeForm, { VehiculeFormData } from '@/components/vehicules/VehiculeForm';
@@ -15,6 +15,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
   const [client, setClient] = useState<Client | null>(null);
   const [vehicules, setVehicules] = useState<Vehicule[]>([]);
   const [factures, setFactures] = useState<Facture[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [editOpen, setEditOpen] = useState(false);
   const [vehiculeDrawerOpen, setVehiculeDrawerOpen] = useState(false);
@@ -29,11 +30,13 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
       api.get(`/clients/${id}`),
       api.get(`/vehicules?client_id=${id}`),
       api.get(`/clients/${id}/factures`),
+      api.get(`/notifications?client_id=${id}`),
     ])
-      .then(([clientRes, vehiculesRes, facturesRes]) => {
+      .then(([clientRes, vehiculesRes, facturesRes, notificationsRes]) => {
         setClient(clientRes.data);
         setVehicules(vehiculesRes.data);
         setFactures(facturesRes.data);
+        setNotifications(notificationsRes.data);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -190,7 +193,7 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
                   <div>
                     <p className="text-sm font-medium text-gray-800">{v.marque_modele}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
-                      {[v.annee, v.taille_moteur, v.plaque ? `Plaque : ${v.plaque}` : null]
+                      {[v.annee, v.taille_moteur, v.plaque ? `Plaque : ${v.plaque}` : null, v.vin ? `VIN : ${v.vin}` : null]
                         .filter(Boolean)
                         .join(' • ')}
                     </p>
@@ -271,6 +274,43 @@ export default function ClientDetailPage({ params }: { params: Promise<{ id: str
             </div>
           )}
         </div>
+
+        {/* Notifications envoyées */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
+            <Bell size={15} className="text-gray-400" />
+            <h3 className="font-semibold text-gray-800">Notifications envoyées</h3>
+          </div>
+          {notifications.length === 0 ? (
+            <div className="px-6 py-6 text-center text-gray-400 text-sm">
+              Aucune notification envoyée à ce client
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-50">
+              {notifications.map((n) => (
+                <div key={n.notification_id} className="flex items-center justify-between px-6 py-3 text-sm">
+                  <div>
+                    <p className="text-gray-800">{n.message}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {n.canal.toUpperCase()} · {n.date_envoi.replace('T', ' ').slice(0, 16)}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-xs px-2 py-1 rounded-full font-medium whitespace-nowrap ml-3 ${
+                      n.statut === 'echoue'
+                        ? 'bg-red-100 text-red-700'
+                        : n.statut === 'recu'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
+                    {n.statut === 'echoue' ? 'Échoué' : n.statut === 'recu' ? 'Reçu' : 'Envoyé'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Drawer modification client */}
@@ -317,12 +357,12 @@ function FactureLigne({ f }: { f: Facture }) {
       <div className="flex items-center gap-3">
         <span
           className={`text-xs px-2 py-1 rounded-full font-medium ${
-            f.statut_vehicule === 'pret'
+            f.statut_reparation === 'fini'
               ? 'bg-green-100 text-green-700'
               : 'bg-yellow-100 text-yellow-700'
           }`}
         >
-          {f.statut_vehicule === 'pret' ? 'Prêt' : 'En cours'}
+          {f.statut_reparation === 'fini' ? 'Prêt' : 'En cours'}
         </span>
         <span className="font-semibold text-sm text-gray-800">
           {f.total_facture.toFixed(2)} $

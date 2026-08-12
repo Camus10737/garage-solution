@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
-import { Car, Users, FileText, Clock } from 'lucide-react';
+import { Car, Users, FileText, Clock, AlertTriangle, BellOff } from 'lucide-react';
 import api from '@/lib/api';
 import Link from 'next/link';
 import { Facture } from '@/types';
@@ -17,6 +17,8 @@ interface Stats {
   vehiculesPrets: number;
   totalClients: number;
   facturesDuJour: number;
+  piecesStockBas: number;
+  notificationsEchoueesRecentes: number;
 }
 
 type DrawerType = 'client' | 'facture' | 'piece' | 'service' | null;
@@ -27,6 +29,8 @@ export default function DashboardPage() {
     vehiculesPrets: 0,
     totalClients: 0,
     facturesDuJour: 0,
+    piecesStockBas: 0,
+    notificationsEchoueesRecentes: 0,
   });
   const [facturesRecentes, setFacturesRecentes] = useState<Facture[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,6 +51,8 @@ export default function DashboardPage() {
           vehiculesPrets: d.vehicules_prets,
           totalClients: d.total_clients_actifs,
           facturesDuJour: d.factures_aujourd_hui,
+          piecesStockBas: d.pieces_stock_bas,
+          notificationsEchoueesRecentes: d.notifications_echouees_7j,
         });
         setFacturesRecentes(facturesRes.data);
       } catch {
@@ -104,6 +110,8 @@ export default function DashboardPage() {
     { label: 'Véhicules prêts', value: stats.vehiculesPrets, icon: Car, color: 'bg-green-500', href: '/factures?statut=pret' },
     { label: 'Total clients', value: stats.totalClients, icon: Users, color: 'bg-blue-500', href: '/clients' },
     { label: "Factures aujourd'hui", value: stats.facturesDuJour, icon: FileText, color: 'bg-purple-500', href: '/factures' },
+    { label: 'Pièces en stock bas', value: stats.piecesStockBas, icon: AlertTriangle, color: 'bg-orange-500', href: '/pieces' },
+    { label: 'Notifications échouées (7j)', value: stats.notificationsEchoueesRecentes, icon: BellOff, color: stats.notificationsEchoueesRecentes > 0 ? 'bg-red-500' : 'bg-gray-400', href: '/notifications' },
   ];
 
   const drawerTitle: Record<NonNullable<DrawerType>, string> = {
@@ -117,7 +125,7 @@ export default function DashboardPage() {
     <AppLayout title="Tableau de bord">
       <div className="space-y-6">
         {/* Cartes statistiques */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
           {statCards.map(({ label, value, icon: Icon, color, href }) => (
             <Link href={href} key={label}>
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
@@ -179,8 +187,8 @@ export default function DashboardPage() {
                     <p className="text-xs text-gray-400">{f.date_creation}</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${f.statut_vehicule === 'pret' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                      {f.statut_vehicule === 'pret' ? 'Prêt' : 'En cours'}
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${f.statut_reparation === 'fini' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {f.statut_reparation === 'fini' ? 'Prêt' : 'En cours'}
                     </span>
                     <span className="font-semibold text-sm text-gray-800">
                       {f.total_facture.toFixed(2)} $

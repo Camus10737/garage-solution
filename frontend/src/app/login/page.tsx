@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useForm } from 'react-hook-form';
@@ -92,6 +93,13 @@ export default function LoginPage() {
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
+
+        <p className="text-center text-sm text-gray-500 mt-6">
+          Nouveau garage ?{' '}
+          <Link href="/inscription" className="text-blue-600 hover:text-blue-800 font-medium">
+            Créer un compte
+          </Link>
+        </p>
       </div>
     </div>
   );

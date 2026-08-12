@@ -4,7 +4,25 @@ import { useEffect, useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Notification } from '@/types';
 import api from '@/lib/api';
+import Link from 'next/link';
 import { CheckCircle, XCircle, Clock, Send } from 'lucide-react';
+
+const LABELS_TYPE: Record<Notification['type'], string> = {
+  vehicule_pret: 'Véhicule prêt',
+  statut_reparation: 'Statut réparation',
+  rappel_entretien: 'Rappel entretien',
+  devis_envoye: 'Devis envoyé',
+  piece_recue: 'Pièce reçue',
+  facture_envoyee: 'Facture envoyée',
+  rappel_paiement: 'Rappel de paiement',
+  promotion: 'Promotion',
+};
+
+const LABELS_CANAL: Record<Notification['canal'], string> = {
+  sms: 'SMS',
+  whatsapp: 'WhatsApp',
+  email: 'Courriel',
+};
 
 const statutIcon = (statut: Notification['statut']) => {
   if (statut === 'envoye') return <Send size={14} className="text-blue-500" />;
@@ -35,8 +53,9 @@ export default function NotificationsPage() {
       <div className="space-y-4">
         {/* Info */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">
-          Les notifications sont envoyées automatiquement lorsqu&apos;un véhicule passe au statut{' '}
-          <strong>Prêt</strong>.
+          Notifications envoyées automatiquement (changement de statut de réparation, pièce reçue) ou
+          manuellement (devis, facture, rappel de paiement). Le canal des envois automatiques se configure
+          dans <Link href="/parametres" className="underline font-medium">Paramètres</Link>.
         </div>
 
         {/* Historique */}
@@ -49,6 +68,7 @@ export default function NotificationsPage() {
               <tr className="bg-gray-50 border-b border-gray-100">
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Client</th>
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Type</th>
+                <th className="text-left px-6 py-3 font-medium text-gray-600">Canal</th>
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Message</th>
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Date</th>
                 <th className="text-left px-6 py-3 font-medium text-gray-600">Statut</th>
@@ -57,13 +77,13 @@ export default function NotificationsPage() {
             <tbody className="divide-y divide-gray-50">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-10 text-gray-400">
+                  <td colSpan={6} className="text-center py-10 text-gray-400">
                     Chargement...
                   </td>
                 </tr>
               ) : notifications.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-10 text-gray-400">
+                  <td colSpan={6} className="text-center py-10 text-gray-400">
                     Aucune notification envoyée
                   </td>
                 </tr>
@@ -73,7 +93,12 @@ export default function NotificationsPage() {
                     <td className="px-6 py-4 font-medium text-gray-800">{n.client_nom}</td>
                     <td className="px-6 py-4">
                       <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full font-medium">
-                        {n.type === 'vehicule_pret' ? 'Véhicule prêt' : 'Rappel entretien'}
+                        {LABELS_TYPE[n.type] || n.type}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full font-medium">
+                        {LABELS_CANAL[n.canal] || n.canal}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-600 max-w-xs truncate">{n.message}</td>

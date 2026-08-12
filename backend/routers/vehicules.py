@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from core.auth import verify_token
 from core.firebase import get_db
+from core.permissions import require_roles
+from core.tenant import verifier_appartenance
 from schemas.vehicule import VehiculeCreate, VehiculeOut, VehiculeUpdate
 
 router = APIRouter(prefix="/vehicules", tags=["Véhicules"])
@@ -22,7 +24,7 @@ async def list_vehicules(
     _user: dict = Depends(verify_token),
 ):
     db = get_db()
-    query = db.collection("vehicules")
+    query = db.collection("vehicules").where("garage_id", "==", _user["garage_id"])
     if client_id:
         query = query.where("client_id", "==", client_id)
     docs = list(query.stream())
@@ -34,14 +36,14 @@ async def list_vehicules(
 @router.post("", response_model=VehiculeOut, status_code=status.HTTP_201_CREATED)
 async def create_vehicule(
     body: VehiculeCreate,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     client_doc = db.collection("clients").document(body.client_id).get()
-    if not client_doc.exists:
-        raise HTTPException(status_code=404, detail="Client introuvable")
+    verifier_appartenance(client_doc, _user["garage_id"], "Client introuvable")
 
     data = body.model_dump()
+    data["garage_id"] = _user["garage_id"]
     data["date_creation"] = datetime.now(timezone.utc).isoformat()
 
     ref = db.collection("vehicules").document()
@@ -54,13 +56,12 @@ async def create_vehicule(
 async def update_vehicule(
     vehicule_id: str,
     body: VehiculeUpdate,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     ref = db.collection("vehicules").document(vehicule_id)
     doc = ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Véhicule introuvable")
+    verifier_appartenance(doc, _user["garage_id"], "Véhicule introuvable")
 
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     ref.update(updates)
@@ -72,17 +73,17 @@ async def update_vehicule(
 @router.delete("/{vehicule_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_vehicule(
     vehicule_id: str,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     ref = db.collection("vehicules").document(vehicule_id)
     doc = ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Véhicule introuvable")
+    verifier_appartenance(doc, _user["garage_id"], "Véhicule introuvable")
 
     # Bloquer la suppression si des factures sont liées
     factures = (
         db.collection("factures")
+        .where("garage_id", "==", _user["garage_id"])
         .where("vehicule_id", "==", vehicule_id)
         .limit(1)
         .stream()

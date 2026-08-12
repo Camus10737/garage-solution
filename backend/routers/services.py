@@ -2,8 +2,9 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from core.auth import verify_token
 from core.firebase import get_db
+from core.permissions import require_roles
+from core.tenant import verifier_appartenance
 from schemas.service import ServiceCreate, ServiceOut, ServicePatch, ServiceUpdate
 
 router = APIRouter(prefix="/services", tags=["Services"])
@@ -18,10 +19,10 @@ def _doc_to_service(doc) -> ServiceOut:
 @router.get("", response_model=List[ServiceOut])
 async def list_services(
     active_only: bool = False,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
-    query = db.collection("services")
+    query = db.collection("services").where("garage_id", "==", _user["garage_id"])
     if active_only:
         query = query.where("active", "==", True)
     docs = query.stream()
@@ -31,10 +32,11 @@ async def list_services(
 @router.post("", response_model=ServiceOut, status_code=status.HTTP_201_CREATED)
 async def create_service(
     body: ServiceCreate,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     data = body.model_dump()
+    data["garage_id"] = _user["garage_id"]
     data["active"] = True
 
     ref = db.collection("services").document()
@@ -47,12 +49,11 @@ async def create_service(
 @router.get("/{service_id}", response_model=ServiceOut)
 async def get_service(
     service_id: str,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     doc = db.collection("services").document(service_id).get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Service introuvable")
+    verifier_appartenance(doc, _user["garage_id"], "Service introuvable")
     return _doc_to_service(doc)
 
 
@@ -60,13 +61,12 @@ async def get_service(
 async def update_service(
     service_id: str,
     body: ServiceUpdate,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     ref = db.collection("services").document(service_id)
     doc = ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Service introuvable")
+    verifier_appartenance(doc, _user["garage_id"], "Service introuvable")
 
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     ref.update(updates)
@@ -78,13 +78,12 @@ async def update_service(
 async def patch_service(
     service_id: str,
     body: ServicePatch,
-    _user: dict = Depends(verify_token),
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
     ref = db.collection("services").document(service_id)
     doc = ref.get()
-    if not doc.exists:
-        raise HTTPException(status_code=404, detail="Service introuvable")
+    verifier_appartenance(doc, _user["garage_id"], "Service introuvable")
 
     ref.update({"active": body.active})
     data = {**doc.to_dict(), "active": body.active, "service_id": service_id}

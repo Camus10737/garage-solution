@@ -2,8 +2,8 @@ from typing import List
 
 from fastapi import APIRouter, Depends
 
-from core.auth import verify_token
 from core.firebase import get_db
+from core.permissions import require_roles
 from schemas.notification import NotificationOut
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
@@ -11,14 +11,18 @@ router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
 @router.get("", response_model=List[NotificationOut])
 async def list_notifications(
-    _user: dict = Depends(verify_token),
+    client_id: str = "",
+    _user: dict = Depends(require_roles("admin", "gestionnaire")),
 ):
     db = get_db()
-    docs = (
+    query = (
         db.collection("notifications")
+        .where("garage_id", "==", _user["garage_id"])
         .order_by("date_envoi", direction="DESCENDING")
-        .stream()
     )
+    if client_id:
+        query = query.where("client_id", "==", client_id)
+    docs = query.stream()
 
     notifications = []
     for doc in docs:

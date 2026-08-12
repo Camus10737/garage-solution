@@ -10,6 +10,8 @@ class VehiculeCreate(BaseModel):
     annee: Optional[str] = None
     taille_moteur: Optional[str] = None
     plaque: Optional[str] = None
+    vin: Optional[str] = None
+    kilometrage_actuel: Optional[int] = None
     notes: Optional[str] = None
 
 
@@ -18,6 +20,8 @@ class VehiculeUpdate(BaseModel):
     annee: Optional[str] = None
     taille_moteur: Optional[str] = None
     plaque: Optional[str] = None
+    vin: Optional[str] = None
+    kilometrage_actuel: Optional[int] = None
     notes: Optional[str] = None
 
 
@@ -28,5 +32,7 @@ class VehiculeOut(BaseModel):
     annee: Optional[str] = None
     taille_moteur: Optional[str] = None
     plaque: Optional[str] = None
+    vin: Optional[str] = None
+    kilometrage_actuel: Optional[int] = None
     notes: Optional[str] = None
     date_creation: str

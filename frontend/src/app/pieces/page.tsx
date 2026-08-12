@@ -4,9 +4,13 @@ import { useEffect, useState } from 'react';
 import AppLayout from '@/components/layout/AppLayout';
 import { Piece } from '@/types';
 import api from '@/lib/api';
-import { Plus, Pencil, Ban, RotateCcw } from 'lucide-react';
+import Link from 'next/link';
+import { Plus, Pencil, Ban, RotateCcw, Eye, AlertTriangle } from 'lucide-react';
 import Drawer from '@/components/ui/Drawer';
 import PieceForm, { PieceFormData } from '@/components/pieces/PieceForm';
+
+const stockBas = (p: Piece) =>
+  p.quantite !== undefined && p.seuil_alerte !== undefined && p.seuil_alerte !== null && p.quantite <= p.seuil_alerte;
 
 export default function PiecesPage() {
   const [pieces, setPieces] = useState<Piece[]>([]);
@@ -99,11 +103,18 @@ export default function PiecesPage() {
                 </tr>
               ) : (
                 pieces.map((piece) => (
-                  <tr key={piece.piece_id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 font-medium text-gray-800">{piece.nom}</td>
+                  <tr key={piece.piece_id} className={`hover:bg-gray-50 transition-colors ${stockBas(piece) ? 'bg-orange-50' : ''}`}>
+                    <td className="px-6 py-4 font-medium text-gray-800">
+                      <Link href={`/pieces/${piece.piece_id}`} className="text-blue-600 hover:underline">
+                        {piece.nom}
+                      </Link>
+                    </td>
                     <td className="px-6 py-4 text-gray-600">{piece.prix.toFixed(2)} $</td>
                     <td className="px-6 py-4 text-gray-600">
-                      {piece.quantite !== undefined ? piece.quantite : '—'}
+                      <span className="flex items-center gap-1.5">
+                        {piece.quantite !== undefined ? piece.quantite : '—'}
+                        {stockBas(piece) && <AlertTriangle size={13} className="text-orange-500" />}
+                      </span>
                     </td>
                     <td className="px-6 py-4">
                       {piece.fournie_par_client ? (
@@ -123,6 +134,13 @@ export default function PiecesPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
+                        <Link
+                          href={`/pieces/${piece.piece_id}`}
+                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Voir"
+                        >
+                          <Eye size={15} />
+                        </Link>
                         <button
                           onClick={() => { setError(''); setEditPiece(piece); }}
                           className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"

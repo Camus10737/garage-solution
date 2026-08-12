@@ -18,6 +18,7 @@ export interface FactureFormData {
   vehicule_id: string;
   pieces: LigneFacturePiece[];
   services: LigneFactureService[];
+  kilometrage?: number;
   notes: string;
 }
 
@@ -35,6 +36,7 @@ export default function FactureForm({ onSubmit, loading, defaultClientId }: Prop
 
   const [clientId, setClientId] = useState(defaultClientId || '');
   const [vehiculeId, setVehiculeId] = useState('');
+  const [kilometrage, setKilometrage] = useState('');
   const [lignesPieces, setLignesPieces] = useState<LigneFacturePiece[]>([]);
   const [lignesServices, setLignesServices] = useState<LigneFactureService[]>([]);
   const [notes, setNotes] = useState('');
@@ -73,6 +75,11 @@ export default function FactureForm({ onSubmit, loading, defaultClientId }: Prop
   useEffect(() => { loadBaseData(); }, []);
 
   useEffect(() => {
+    const vehicule = vehicules.find((v) => v.vehicule_id === vehiculeId);
+    setKilometrage(vehicule?.kilometrage_actuel !== undefined ? String(vehicule.kilometrage_actuel) : '');
+  }, [vehiculeId, vehicules]);
+
+  useEffect(() => {
     if (defaultClientId) loadVehicules(defaultClientId);
   }, [defaultClientId]);
 
@@ -101,7 +108,7 @@ export default function FactureForm({ onSubmit, loading, defaultClientId }: Prop
 
   const vehiculeOptions = vehicules.map((v) => ({
     value: v.vehicule_id,
-    label: [v.marque_modele, v.annee, v.plaque].filter(Boolean).join(' • '),
+    label: [v.marque_modele, v.annee, v.plaque, v.vin].filter(Boolean).join(' • '),
   }));
 
   const pieceOptions = pieces.map((p) => ({
@@ -215,7 +222,14 @@ export default function FactureForm({ onSubmit, loading, defaultClientId }: Prop
     if (!clientId) { setError('Veuillez sélectionner un client.'); return; }
     if (!vehiculeId) { setError('Veuillez sélectionner un véhicule.'); return; }
     setError('');
-    await onSubmit({ client_id: clientId, vehicule_id: vehiculeId, pieces: lignesPieces, services: lignesServices, notes });
+    await onSubmit({
+      client_id: clientId,
+      vehicule_id: vehiculeId,
+      pieces: lignesPieces,
+      services: lignesServices,
+      kilometrage: kilometrage ? Number(kilometrage) : undefined,
+      notes,
+    });
   };
 
   return (
@@ -295,6 +309,21 @@ export default function FactureForm({ onSubmit, loading, defaultClientId }: Prop
                 noOptionsMessage={() => 'Aucun véhicule trouvé'}
               />
             )}
+          </div>
+        )}
+
+        {/* Kilométrage */}
+        {vehiculeId && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Kilométrage actuel</label>
+            <input
+              type="number"
+              min={0}
+              value={kilometrage}
+              onChange={(e) => setKilometrage(e.target.value)}
+              placeholder="Lu au compteur"
+              className="w-full max-w-xs border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
           </div>
         )}
 
